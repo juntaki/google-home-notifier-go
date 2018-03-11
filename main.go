@@ -50,6 +50,10 @@ var verificationToken string
 
 func main() {
 	verificationToken = os.Getenv("GOOGLE_HOME_NOTIFIER_TOKEN")
+	port := os.Getenv("GOOGLE_HOME_NOTIFIER_PORT")
+	if port == "" {
+		port = "8080"
+	}
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
@@ -59,7 +63,7 @@ func main() {
 
 	r.Post("/", handler)
 	log.Printf("Started")
-	http.ListenAndServe(":8080", r)
+	http.ListenAndServe(":"+port, r)
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
