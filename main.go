@@ -49,8 +49,8 @@ func find(name string, do func(*cast.Client)) {
 var verificationToken string
 
 func main() {
-	verificationToken = os.Getenv("GOOGLE_HOME_NOTIFIER_TOKEN")
-	port := os.Getenv("GOOGLE_HOME_NOTIFIER_PORT")
+	verificationToken = os.Getenv("GHN_TOKEN")
+	port := os.Getenv("GHN_PORT")
 	if port == "" {
 		port = "8080"
 	}

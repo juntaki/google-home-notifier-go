@@ -5,11 +5,18 @@ Go version of [noelportugal/google-home-notifier](https://github.com/noelportuga
 ## How to start
 
 Run the following command.
-You should set `GOOGLE_HOME_NOTIFIER_TOKEN`, if your port is opend to internet.
+You should set `GHN_TOKEN`, if your port is opend to internet.
 
 ~~~
-export GOOGLE_HOME_NOTIFIER_TOKEN=secrets
+export GHN_TOKEN=secrets
+export GHN_PORT=80
 go build; ./google-home-notifier
+~~~
+
+## Start with Docker
+
+~~~
+docker run -d -e GHN_TOKEN=secrets -e GHN_PORT=80 --net=host juntaki/google-home-notifier-go
 ~~~
 
 ## Test by curl
