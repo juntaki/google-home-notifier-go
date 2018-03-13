@@ -19,8 +19,23 @@ import (
 )
 
 func find(name string, do func(*cast.Client)) {
-	duration := 3 * time.Second
+	// Find cache first
+	if expire.After(time.Now()) && len(cache) != 0 {
+		for name, entry := range cache {
+			if strings.Contains(entry.ServiceInstanceName(), name) {
+				log.Printf("Device %s at %s:%d", entry.ServiceInstanceName(), entry.AddrIPv4[0], entry.Port)
+				do(cast.NewClient(entry.AddrIPv4[0], entry.Port))
+			}
+		}
+		return
+	}
 
+	// Clear cache
+	expire = time.Now()
+	cache = make(map[string]*zeroconf.ServiceEntry)
+
+	// Discover Google Home by mDNS for 10 seconds
+	duration := 10 * time.Second
 	resolver, err := zeroconf.NewResolver(nil)
 	if err != nil {
 		log.Fatalln("Failed to initialize resolver:", err.Error())
@@ -29,6 +44,7 @@ func find(name string, do func(*cast.Client)) {
 	entries := make(chan *zeroconf.ServiceEntry)
 	go func(results <-chan *zeroconf.ServiceEntry) {
 		for entry := range results {
+			cache[entry.ServiceInstanceName()] = entry
 			if strings.Contains(entry.ServiceInstanceName(), name) {
 				log.Printf("Device %s at %s:%d", entry.ServiceInstanceName(), entry.AddrIPv4[0], entry.Port)
 				do(cast.NewClient(entry.AddrIPv4[0], entry.Port))
@@ -44,11 +60,16 @@ func find(name string, do func(*cast.Client)) {
 	}
 
 	<-ctx.Done()
+	expire = time.Now().AddDate(0, 0, 7)
 }
 
 var verificationToken string
+var cache map[string]*zeroconf.ServiceEntry
+var expire time.Time
 
 func main() {
+	cache = make(map[string]*zeroconf.ServiceEntry)
+
 	verificationToken = os.Getenv("GHN_TOKEN")
 	port := os.Getenv("GHN_PORT")
 	if port == "" {
